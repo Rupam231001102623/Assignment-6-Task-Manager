@@ -1,78 +1,145 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import TaskForm from "../components/TaskForm";
 
-function AddTask({ onAdd }) {
-
+function AddTask({ addTask }) {
   const navigate = useNavigate();
 
-  const handleSubmit = (task) => {
+  const [formData, setFormData] = useState({
+    header: "",
+    description: "",
+    priority: "Medium",
+    category: "Academic",
+    dueDate: "2026-08-28",
+  });
 
-    const newTask = {
-      ...task,
-      id: Date.now(),
-      raisedAt: new Date().toLocaleString(
-        "en-IN",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
-        }
-      ),
-      dueDate: "28 Aug 2026"
-    };
+  const [error, setError] = useState("");
 
-    onAdd(newTask);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+
+    setError("");
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!formData.header.trim()) {
+      setError("Please enter a task header.");
+      return;
+    }
+
+    if (!formData.description.trim()) {
+      setError("Please enter a task description.");
+      return;
+    }
+
+    addTask(formData);
     navigate("/tasks");
   };
 
   return (
-    <div className="page">
-
-      <div className="page-header">
+    <div>
+      <div className="page-heading">
         <div>
-          <p className="eyebrow">TASK MANAGEMENT</p>
-          <h1>Create New Task</h1>
-          <p>Add a new task to your task manager.</p>
+          <h2>Add New Task</h2>
+          <p>Create a new task and keep your work organized.</p>
         </div>
       </div>
 
-      <div className="form-container">
+      <div className="form-card">
+        <form onSubmit={handleSubmit}>
+          {error && <div className="form-error">{error}</div>}
 
-        <div className="form-info">
-          <div className="large-form-icon">＋</div>
+          <div className="form-group">
+            <label>Task Header *</label>
+            <input
+              type="text"
+              name="header"
+              placeholder="Enter task title"
+              value={formData.header}
+              onChange={handleChange}
+            />
+          </div>
 
-          <h2>New Task</h2>
+          <div className="form-group">
+            <label>Task Description *</label>
+            <textarea
+              name="description"
+              placeholder="Describe your task..."
+              rows="5"
+              value={formData.description}
+              onChange={handleChange}
+            ></textarea>
+          </div>
 
-          <p>
-            Fill in the details below to create a
-            new task.
-          </p>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Priority</label>
+              <select
+                name="priority"
+                value={formData.priority}
+                onChange={handleChange}
+              >
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
 
-          <div className="info-item">
-            <span>📅</span>
-            <div>
-              <strong>Raised Date</strong>
-              <p>Automatically generated</p>
+            <div className="form-group">
+              <label>Category</label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+              >
+                <option value="Academic">Academic</option>
+                <option value="Personal">Personal</option>
+              </select>
             </div>
           </div>
 
-          <div className="info-item">
-            <span>📌</span>
-            <div>
-              <strong>Due Date</strong>
-              <p>28 Aug 2026</p>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Raised Date & Time</label>
+              <input
+                type="text"
+                value={new Date().toLocaleString()}
+                readOnly
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Due Date</label>
+              <input
+                type="date"
+                name="dueDate"
+                value={formData.dueDate}
+                onChange={handleChange}
+              />
             </div>
           </div>
 
-        </div>
+          <div className="form-actions">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => navigate("/tasks")}
+            >
+              Cancel
+            </button>
 
-        <TaskForm onSubmit={handleSubmit} />
-
+            <button type="submit" className="primary-button">
+              Create Task
+            </button>
+          </div>
+        </form>
       </div>
-
     </div>
   );
 }

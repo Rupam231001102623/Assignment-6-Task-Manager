@@ -1,84 +1,92 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-function CompletedTasks({ tasks }) {
-
-  const navigate = useNavigate();
-
+function CompletedTasks({ tasks, updateTask, deleteTask }) {
   const completedTasks = tasks.filter(
     (task) => task.status === "Closed"
   );
 
-  return (
-    <div className="page">
+  const reopenTask = (id) => {
+    updateTask(id, {
+      status: "Pending",
+    });
+  };
 
-      <div className="page-header">
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this task?")) {
+      deleteTask(id);
+    }
+  };
+
+  return (
+    <div>
+      <div className="page-heading">
         <div>
-          <p className="eyebrow">TASK HISTORY</p>
-          <h1>Completed Tasks</h1>
-          <p>Tasks that have been successfully completed.</p>
+          <h2>Completed Tasks</h2>
+          <p>Review the tasks you have successfully completed.</p>
         </div>
       </div>
 
       {completedTasks.length === 0 ? (
+        <div className="empty-large">
+          <div className="empty-icon completed-empty">✓</div>
+          <h3>No completed tasks</h3>
+          <p>
+            Tasks marked as completed will appear here.
+          </p>
 
-        <div className="empty-state">
-          <div>✓</div>
-          <h2>No completed tasks</h2>
-          <p>Completed tasks will appear here.</p>
+          <Link to="/tasks" className="primary-button">
+            View All Tasks
+          </Link>
         </div>
-
       ) : (
-
-        <div className="completed-list">
-
+        <div className="completed-grid">
           {completedTasks.map((task) => (
+            <div className="completed-card" key={task.id}>
+              <div className="completed-top">
+                <div className="completed-check">✓</div>
 
-            <div
-              className="completed-card"
-              key={task.id}
-            >
-
-              <div className="completed-icon">
-                ✓
+                <span
+                  className={`priority-badge ${task.priority.toLowerCase()}`}
+                >
+                  {task.priority}
+                </span>
               </div>
 
-              <div className="completed-content">
+              <h3>{task.header}</h3>
 
-                <div className="completed-heading">
-                  <h3>{task.title}</h3>
+              <p>{task.description}</p>
 
-                  <span className="status closed">
-                    Closed
-                  </span>
-                </div>
-
-                <p>{task.description}</p>
-
-                <div className="completed-meta">
-                  <span>{task.category}</span>
-                  <span>{task.priority} Priority</span>
-                  <span>Due: {task.dueDate}</span>
-                </div>
-
+              <div className="completed-meta">
+                <span>{task.category}</span>
+                <span>Due {task.dueDate}</span>
               </div>
 
-              <button
-                className="view-btn"
-                onClick={() =>
-                  navigate(`/tasks/${task.id}`)
-                }
-              >
-                View
-              </button>
+              <div className="completed-actions">
+                <Link
+                  to={`/tasks/${task.id}`}
+                  className="action-button view"
+                >
+                  View
+                </Link>
 
+                <button
+                  className="action-button complete"
+                  onClick={() => reopenTask(task.id)}
+                >
+                  Reopen
+                </button>
+
+                <button
+                  className="action-button delete"
+                  onClick={() => handleDelete(task.id)}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-
           ))}
-
         </div>
-
       )}
-
     </div>
   );
 }

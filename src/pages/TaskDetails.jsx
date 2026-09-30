@@ -1,134 +1,222 @@
-import { useNavigate, useParams } from "react-router-dom";
-import TaskForm from "../components/TaskForm";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
-function TaskDetails({ tasks, onUpdate, onDelete }) {
-
+function TaskDetails({ tasks, updateTask, deleteTask }) {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const task = tasks.find(
-    (item) => item.id.toString() === id
+  const task = tasks.find((item) => item.id === id);
+
+  const [isEditing, setIsEditing] = useState(false);
+
+  const [editData, setEditData] = useState(
+    task || {
+      header: "",
+      description: "",
+      priority: "Medium",
+      category: "Academic",
+      dueDate: "2026-08-28",
+    }
   );
 
   if (!task) {
     return (
-      <div className="page">
-        <div className="empty-state">
-          <div>❓</div>
-          <h2>Task Not Found</h2>
-          <p>The requested task does not exist.</p>
-
-          <button
-            className="primary-btn"
-            onClick={() => navigate("/tasks")}
-          >
-            Back to Tasks
-          </button>
-        </div>
+      <div className="not-found">
+        <div className="not-found-icon">?</div>
+        <h2>Task Not Found</h2>
+        <p>The task you are looking for does not exist.</p>
+        <Link to="/tasks" className="primary-button">
+          Back to Tasks
+        </Link>
       </div>
     );
   }
 
-  const handleUpdate = (updatedTask) => {
+  const handleChange = (e) => {
+    setEditData({
+      ...editData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
-    onUpdate({
-      ...task,
-      ...updatedTask
+  const saveChanges = () => {
+    updateTask(task.id, {
+      header: editData.header,
+      description: editData.description,
+      priority: editData.priority,
+      category: editData.category,
+      dueDate: editData.dueDate,
     });
 
-    navigate("/tasks");
+    setIsEditing(false);
+  };
+
+  const toggleStatus = () => {
+    updateTask(task.id, {
+      status: task.status === "Closed" ? "Pending" : "Closed",
+    });
+  };
+
+  const handleDelete = () => {
+    if (window.confirm("Are you sure you want to delete this task?")) {
+      deleteTask(task.id);
+      navigate("/tasks");
+    }
   };
 
   return (
-    <div className="page">
-
-      <div className="details-top">
-
-        <button
-          className="back-btn"
-          onClick={() => navigate("/tasks")}
-        >
-          ← Back to Tasks
-        </button>
-
-        <span className={`status ${task.status.toLowerCase()}`}>
-          {task.status}
-        </span>
-
+    <div>
+      <div className="breadcrumb">
+        <Link to="/tasks">Tasks</Link>
+        <span>/</span>
+        <span>{task.header}</span>
       </div>
 
-      <div className="details-layout">
-
-        <div className="task-details">
-
-          <div className="details-labels">
-
-            <span className={`priority ${task.priority.toLowerCase()}`}>
-              {task.priority}
+      <div className="details-card">
+        <div className="details-header">
+          <div>
+            <span
+              className={`status-badge ${task.status.toLowerCase()}`}
+            >
+              {task.status}
             </span>
 
-            <span className="category">
-              {task.category}
-            </span>
+            {isEditing ? (
+              <input
+                className="edit-title"
+                name="header"
+                value={editData.header}
+                onChange={handleChange}
+              />
+            ) : (
+              <h2>{task.header}</h2>
+            )}
 
+            <p>
+              Created on{" "}
+              {new Date(task.raisedDate).toLocaleString()}
+            </p>
           </div>
 
-          <h1>{task.title}</h1>
+          <div className="details-actions">
+            <button
+              className="secondary-button"
+              onClick={() => setIsEditing(!isEditing)}
+            >
+              {isEditing ? "Cancel" : "Edit Task"}
+            </button>
 
-          <p className="details-description">
-            {task.description}
-          </p>
+            <button
+              className="danger-button"
+              onClick={handleDelete}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
 
-          <div className="details-info">
+        <div className="details-content">
+          <div className="details-section">
+            <h3>Description</h3>
 
-            <div>
-              <span>Raised Date & Time</span>
-              <strong>{task.raisedAt}</strong>
-            </div>
+            {isEditing ? (
+              <textarea
+                name="description"
+                rows="6"
+                value={editData.description}
+                onChange={handleChange}
+              ></textarea>
+            ) : (
+              <p className="description-text">
+                {task.description}
+              </p>
+            )}
+          </div>
 
-            <div>
-              <span>Due Date</span>
-              <strong>{task.dueDate}</strong>
-            </div>
-
-            <div>
+          <div className="details-grid">
+            <div className="detail-item">
               <span>Priority</span>
-              <strong>{task.priority}</strong>
+
+              {isEditing ? (
+                <select
+                  name="priority"
+                  value={editData.priority}
+                  onChange={handleChange}
+                >
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              ) : (
+                <strong
+                  className={`priority-badge ${task.priority.toLowerCase()}`}
+                >
+                  {task.priority}
+                </strong>
+              )}
             </div>
 
-            <div>
+            <div className="detail-item">
               <span>Category</span>
-              <strong>{task.category}</strong>
+
+              {isEditing ? (
+                <select
+                  name="category"
+                  value={editData.category}
+                  onChange={handleChange}
+                >
+                  <option value="Academic">Academic</option>
+                  <option value="Personal">Personal</option>
+                </select>
+              ) : (
+                <strong>{task.category}</strong>
+              )}
             </div>
 
+            <div className="detail-item">
+              <span>Raised Date</span>
+              <strong>
+                {new Date(task.raisedDate).toLocaleDateString()}
+              </strong>
+            </div>
+
+            <div className="detail-item">
+              <span>Due Date</span>
+
+              {isEditing ? (
+                <input
+                  type="date"
+                  name="dueDate"
+                  value={editData.dueDate}
+                  onChange={handleChange}
+                />
+              ) : (
+                <strong>{task.dueDate}</strong>
+              )}
+            </div>
           </div>
-
-          <button
-            className="delete-large-btn"
-            onClick={() => {
-              onDelete(task.id);
-              navigate("/tasks");
-            }}
-          >
-            Delete Task
-          </button>
-
         </div>
 
-        <div className="edit-panel">
-
-          <h2>Update Task</h2>
-          <p>Edit task information below.</p>
-
-          <TaskForm
-            initialTask={task}
-            onSubmit={handleUpdate}
-          />
-
+        <div className="details-footer">
+          {isEditing ? (
+            <button
+              className="primary-button"
+              onClick={saveChanges}
+            >
+              Save Changes
+            </button>
+          ) : (
+            <button
+              className="primary-button"
+              onClick={toggleStatus}
+            >
+              {task.status === "Closed"
+                ? "Reopen Task"
+                : "Mark as Completed"}
+            </button>
+          )}
         </div>
-
       </div>
-
     </div>
   );
 }
